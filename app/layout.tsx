@@ -4,6 +4,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Header } from "@/components/header";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { Suspense } from "react";
+import { Loader2 } from "lucide-react";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -43,7 +45,17 @@ export default function RootLayout({
                     <NuqsAdapter>
                         <Header />
 
-                        <main className="container max-w-screen-2xl px-4 sm:px-6 lg:px-8 relative z-10 mt-14">{children}</main>
+                        <Suspense
+                            fallback={
+                                <div className="flex justify-center items-center h-screen">
+                                    <Loader2 className="animate-spin h-4 w-4 text-gray-500/60" />
+                                </div>
+                            }
+                        >
+                            <main className="container max-w-screen-2xl px-4 sm:px-6 lg:px-8 relative z-10 mt-14">
+                                {children}
+                            </main>
+                        </Suspense>
                     </NuqsAdapter>
                 </div>
                 <Toaster />
