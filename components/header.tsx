@@ -10,7 +10,6 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const menuItems = [
     { href: "/", label: "Leaderboard" },
-    { href: "/research", label: "Research" },
     { href: "/about", label: "About" },
     { href: "/admin", label: "Admin" },
 ];
@@ -50,9 +49,7 @@ export const Header = () => {
                                 key={link.href}
                                 href={link.href}
                                 className={`transition-colors hover:text-foreground ${
-                                    isActiveRoute(link.href)
-                                        ? "text-foreground font-bold"
-                                        : "text-foreground/50"
+                                    isActiveRoute(link.href) ? "text-foreground font-bold" : "text-foreground/50"
                                 }`}
                             >
                                 {link.label}
@@ -101,9 +98,7 @@ export const Header = () => {
                                     href={item.href}
                                     onClick={() => setIsOpen(false)}
                                     className={`text-sm transition-colors hover:text-foreground ${
-                                        isActiveRoute(item.href)
-                                            ? "text-foreground font-bold"
-                                            : "text-foreground/50"
+                                        isActiveRoute(item.href) ? "text-foreground font-bold" : "text-foreground/50"
                                     }`}
                                 >
                                     {item.label}

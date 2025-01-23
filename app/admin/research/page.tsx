@@ -10,8 +10,8 @@ export default function ResearchPage() {
             <PageTitle
                 title="Research Tasks"
                 backLink={{
-                    href: "/",
-                    label: "Back to Leaderboard"
+                    href: "/admin",
+                    label: "Back to Settings",
                 }}
             />
 
@@ -19,8 +19,7 @@ export default function ResearchPage() {
                 <div
                     className="absolute inset-0 opacity-50"
                     style={{
-                        background:
-                            "radial-gradient(circle at center, rgba(37, 99, 235, 0.15) 0%, rgba(37, 99, 235, 0) 70%)",
+                        background: "radial-gradient(circle at center, rgba(37, 99, 235, 0.15) 0%, rgba(37, 99, 235, 0) 70%)",
                     }}
                 />
                 <div className="relative z-10">

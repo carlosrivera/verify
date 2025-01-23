@@ -1,28 +1,79 @@
 "use client";
 
-import { Users2, CheckCircle, LineChart } from "lucide-react";
+import { Users2, CheckCircle, LineChart, Search, TrendingUp, TrendingDown, Plus } from "lucide-react";
 import { PageTitle } from "@/components/page-title";
 import Image from "next/image";
-import { TrendingUp, TrendingDown } from "lucide-react";
 import { match } from "ts-pattern";
 import { cn } from "@/lib/utils";
 import { influencerData } from "@/data/sample";
 import React from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { ArrowUpDown, Check, X } from "lucide-react";
+import { useQueryState } from "nuqs";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import ResearchDialog from "@/components/research-dialog";
+import Humanize from "humanize-plus";
 
 const categories = ["Nutrition", "Fitness", "Medicine", "Mental Health", "Neuroscience"] as const;
+type Category = (typeof categories)[number];
+type SortOption = "rank" | "followers" | "score";
 
 /**
  * Leaderboard page showing influencer trust rankings
  */
 const LeaderboardPage = () => {
-    const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null);
+    const [selectedCategory, setSelectedCategory] = useQueryState<Category | null>("category", {
+        defaultValue: null,
+        parse: (value): Category | null => (categories.includes(value as Category) ? (value as Category) : null),
+        serialize: (value) => value || "",
+    });
+
+    const [sortBy, setSortBy] = useQueryState<SortOption>("sort", {
+        defaultValue: "rank",
+        parse: (value): SortOption => (["rank", "followers", "score"].includes(value) ? (value as SortOption) : "rank"),
+        serialize: (value) => value,
+    });
+
+    const [searchQuery, setSearchQuery] = useQueryState("q", {
+        defaultValue: "",
+        parse: (value): string => value || "",
+        serialize: (value) => value,
+    });
+
+    const [isAddModalOpen, setIsAddModalOpen] = useQueryState("add", {
+        defaultValue: false,
+        parse: (value): boolean => value === "true",
+        serialize: (value) => (value ? "true" : ""),
+    });
 
     const filteredInfluencers = React.useMemo(() => {
-        if (!selectedCategory) return influencerData;
-        return influencerData.filter((influencer) => influencer.category === selectedCategory);
-    }, [selectedCategory]);
+        let filtered = selectedCategory
+            ? influencerData.filter((influencer) => influencer.category === selectedCategory)
+            : influencerData;
+
+        if (searchQuery) {
+            filtered = filtered.filter(
+                (influencer) =>
+                    influencer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    influencer.category.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+        }
+
+        return [...filtered].sort((a, b) => {
+            switch (sortBy) {
+                case "followers":
+                    return b.followers - a.followers;
+                case "score":
+                    return b.trustScore - a.trustScore;
+                default:
+                    return 0;
+            }
+        });
+    }, [selectedCategory, sortBy, searchQuery]);
 
     return (
         <div className="mx-auto max-w-5xl mb-20">
@@ -43,7 +94,7 @@ const LeaderboardPage = () => {
                             </div>
                         </div>
                     </div>
-                    
+
                     <div className="rounded-lg border border-gray-700/30 bg-gray-900/70 p-4 md:p-6">
                         <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-8">
                             <CheckCircle className="h-6 w-6 md:h-8 md:w-8 text-emerald-500" />
@@ -53,7 +104,7 @@ const LeaderboardPage = () => {
                             </div>
                         </div>
                     </div>
-                    
+
                     <div className="col-span-2 md:col-span-1 rounded-lg border border-gray-700/30 bg-gray-900/70 p-4 md:p-6">
                         <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-8">
                             <LineChart className="h-6 w-6 md:h-8 md:w-8 text-emerald-500" />
@@ -65,32 +116,140 @@ const LeaderboardPage = () => {
                     </div>
                 </div>
 
-                {/* Category Filter */}
+                {/* Category Filter with Search and Sort Buttons */}
                 <div className="mb-8">
-                    <div className="flex flex-wrap gap-2 text-sm font-semibold">
-                        {categories.map((category) => (
+                    <div className="flex items-center justify-between">
+                        <div className="flex flex-wrap gap-2 text-sm font-semibold flex-1">
+                            {categories.map((category) => (
+                                <button
+                                    key={category}
+                                    onClick={() => setSelectedCategory(category)}
+                                    className={cn(
+                                        "px-4 py-2 rounded-full transition-colors duration-300 border border-gray-700/30 shadow-sm",
+                                        selectedCategory === category
+                                            ? "bg-emerald-500 text-white hover:bg-emerald-500/80"
+                                            : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                                    )}
+                                >
+                                    {category}
+                                </button>
+                            ))}
                             <button
-                                key={category}
-                                onClick={() => setSelectedCategory(category)}
+                                onClick={() => setSelectedCategory(null)}
                                 className={cn(
-                                    "px-4 py-2 rounded-full transition-colors duration-200",
-                                    selectedCategory === category
-                                        ? "bg-emerald-500 text-white"
+                                    "px-4 py-2 rounded-full transition-colors duration-300 border border-gray-700/30 shadow-sm",
+                                    !selectedCategory
+                                        ? "bg-emerald-500 text-white hover:bg-emerald-500/80"
                                         : "bg-gray-800 text-gray-300 hover:bg-gray-700"
                                 )}
                             >
-                                {category}
+                                All
                             </button>
-                        ))}
-                        <button
-                            onClick={() => setSelectedCategory(null)}
-                            className={cn(
-                                "px-4 py-2 rounded-full transition-colors duration-200",
-                                !selectedCategory ? "bg-emerald-500 text-white" : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                            )}
-                        >
-                            All
-                        </button>
+                        </div>
+
+                        {/* Search and Sort Controls */}
+                        <div className="flex items-center gap-2 ml-4">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setIsAddModalOpen(true)}
+                                className="p-2 pr-4 aspect-square bg-emerald-500 border-gray-800/50 hover:bg-emerald-500/80 transition-all duration-300 font-semibold"
+                            >
+                                <Plus className="h-4 w-4 text-white" strokeWidth={2.5} />
+                                Add
+                            </Button>
+
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className={cn(
+                                            "p-2 aspect-square bg-gray-800 border-gray-700/30 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-300",
+                                            searchQuery && "text-emerald-500 border-emerald-500/50"
+                                        )}
+                                    >
+                                        <Search className="h-4 w-4" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent
+                                    className="w-80 p-4 bg-gray-950/70 border border-gray-700/30 shadow-lg backdrop-blur-sm"
+                                    align="end"
+                                >
+                                    <div className="space-y-3">
+                                        <div className="space-y-4">
+                                            <h4 className="font-medium leading-none text-gray-400">Search Influencers</h4>
+                                            <div className="relative">
+                                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                                                <Input
+                                                    type="text"
+                                                    placeholder="Search by name or category..."
+                                                    value={searchQuery}
+                                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                                    className="pl-10 bg-gray-800/50 border-gray-700/30 text-gray-300 placeholder:text-gray-500 focus-visible:ring-emerald-500/50"
+                                                />
+                                                {searchQuery && (
+                                                    <button
+                                                        onClick={() => setSearchQuery("")}
+                                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                                                    >
+                                                        <X className="h-4 w-4" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                        {searchQuery ? (
+                                            <div className="text-sm text-gray-400">
+                                                Found {filteredInfluencers.length} results
+                                            </div>
+                                        ) : (
+                                            <div className="text-sm text-gray-400/50">
+                                                Search for an influencer by name or category
+                                            </div>
+                                        )}
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
+
+                            {/* Sort Dropdown */}
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="p-2 aspect-square bg-gray-800 border-gray-700/30 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-300"
+                                    >
+                                        <ArrowUpDown className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    align="end"
+                                    className="w-[180px] bg-gray-950/70 border border-gray-700/30 shadow-lg rounded-lg backdrop-blur-sm"
+                                >
+                                    <DropdownMenuItem
+                                        onClick={() => setSortBy("rank")}
+                                        className="cursor-pointer flex items-center justify-between"
+                                    >
+                                        <span>Sort by Rank</span>
+                                        {sortBy === "rank" && <Check className="h-4 w-4" />}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={() => setSortBy("followers")}
+                                        className="cursor-pointer flex items-center justify-between"
+                                    >
+                                        <span>Sort by Followers</span>
+                                        {sortBy === "followers" && <Check className="h-4 w-4" />}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={() => setSortBy("score")}
+                                        className="cursor-pointer flex items-center justify-between"
+                                    >
+                                        <span>Sort by Trust Score</span>
+                                        {sortBy === "score" && <Check className="h-4 w-4" />}
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -111,7 +270,7 @@ const LeaderboardPage = () => {
                                 <div className="flex flex-row-reverse sm:flex-row items-center gap-4 w-full">
                                     {/* Rank */}
                                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gray-800/15 text-lg font-bold">
-                                        #{index + 1}
+                                        #{influencer.rank}
                                     </div>
 
                                     {/* Profile Image & Name */}
@@ -158,9 +317,7 @@ const LeaderboardPage = () => {
 
                                         {/* Followers */}
                                         <div className="text-right min-w-[100px]">
-                                            <div className="text-lg font-bold">
-                                                {(influencer.followers / 1e6).toFixed(1)}M
-                                            </div>
+                                            <div className="text-lg font-bold">{(influencer.followers / 1e6).toFixed(1)}M</div>
                                             <p className="text-sm text-gray-400">Followers</p>
                                         </div>
 
@@ -198,14 +355,16 @@ const LeaderboardPage = () => {
                                     {/* Followers */}
                                     <div className="text-center">
                                         <div className="text-lg font-bold">
-                                            {(influencer.followers / 1e6).toFixed(1)}M
+                                            {Humanize.compactInteger(influencer.followers, 1)}
                                         </div>
                                         <p className="text-sm text-gray-400">Followers</p>
                                     </div>
 
                                     {/* Verified Claims */}
                                     <div className="text-right">
-                                        <div className="text-lg font-bold">{influencer.verifiedClaims}</div>
+                                        <div className="text-lg font-bold">
+                                            {Humanize.compactInteger(influencer.verifiedClaims, 0)}
+                                        </div>
                                         <p className="text-sm text-gray-400">Verified Claims</p>
                                     </div>
                                 </div>
@@ -214,6 +373,8 @@ const LeaderboardPage = () => {
                     </motion.div>
                 ))}
             </div>
+
+            <ResearchDialog open={isAddModalOpen} onOpenChange={(open) => setIsAddModalOpen(open)} />
         </div>
     );
 };

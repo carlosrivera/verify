@@ -55,12 +55,12 @@ export default {
             },
             keyframes: {
                 slideDown: {
-                    from: { height: "0px", opacity: "0"},
+                    from: { height: "0px", opacity: "0" },
                     to: { height: "var(--radix-collapsible-content-height)", opacity: "1" },
                 },
                 slideUp: {
                     from: { height: "var(--radix-collapsible-content-height)", opacity: "1" },
-                    to: { height: "0px", opacity: "0"},
+                    to: { height: "0px", opacity: "0" },
                 },
                 fadeIn: {
                     from: { opacity: "0" },

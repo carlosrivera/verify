@@ -32,10 +32,8 @@ export const PageTitle = ({ title, description, backLink }: PageTitleProps) => {
                     )}
                 </div>
                 <h1 className="text-2xl font-bold">{title}</h1>
-                {description && (
-                    <p className="text-gray-400 text-base max-w-xl">{description}</p>
-                )}
+                {description && <p className="text-gray-400 text-base max-w-xl">{description}</p>}
             </div>
         </div>
     );
-}; 
+};
