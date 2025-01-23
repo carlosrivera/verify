@@ -48,8 +48,8 @@ export const Header = () => {
                             <Link
                                 key={link.href}
                                 href={link.href}
-                                className={`transition-colors hover:text-foreground ${
-                                    isActiveRoute(link.href) ? "text-foreground font-bold" : "text-foreground/50"
+                                className={`transition-colors hover:text-foreground font-semibold ${
+                                    isActiveRoute(link.href) ? "text-foreground" : "text-foreground/50"
                                 }`}
                             >
                                 {link.label}
